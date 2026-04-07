@@ -89,27 +89,30 @@
 
   <script src="https://s3.tradingview.com/tv.js"></script>
   <script>
+    const API_KEY = 'd7ao3mhr01qtpbh97ha0d7ao3mhr01qtpbh97hag';
+
     const STOCKS = [
-      { symbol: 'META',  tv: 'NASDAQ:META',  yf: 'META'  },
-      { symbol: 'NVDA',  tv: 'NASDAQ:NVDA',  yf: 'NVDA'  },
-      { symbol: 'SNEX',  tv: 'NASDAQ:SNEX',  yf: 'SNEX'  },
-      { symbol: 'VRT',   tv: 'NYSE:VRT',     yf: 'VRT'   },
-      { symbol: 'QQQ',   tv: 'NASDAQ:QQQ',   yf: 'QQQ'   },
-      { symbol: 'AMZN',  tv: 'NASDAQ:AMZN',  yf: 'AMZN'  },
-      { symbol: 'AZO',   tv: 'NYSE:AZO',     yf: 'AZO'   },
-      { symbol: 'BRK/B', tv: 'NYSE:BRK.B',   yf: 'BRK-B' },
-      { symbol: 'COIN',  tv: 'NASDAQ:COIN',  yf: 'COIN'  },
-      { symbol: 'GNRC',  tv: 'NYSE:GNRC',    yf: 'GNRC'  },
-      { symbol: 'VOO',   tv: 'AMEX:VOO',     yf: 'VOO'   },
+      { symbol: 'META',  tv: 'NASDAQ:META'  },
+      { symbol: 'NVDA',  tv: 'NASDAQ:NVDA'  },
+      { symbol: 'SNEX',  tv: 'NASDAQ:SNEX'  },
+      { symbol: 'VRT',   tv: 'NYSE:VRT'     },
+      { symbol: 'QQQ',   tv: 'NASDAQ:QQQ'   },
+      { symbol: 'AMZN',  tv: 'NASDAQ:AMZN'  },
+      { symbol: 'AZO',   tv: 'NYSE:AZO'     },
+      { symbol: 'BRK/B', tv: 'NYSE:BRK.B'   },
+      { symbol: 'COIN',  tv: 'NASDAQ:COIN'  },
+      { symbol: 'GNRC',  tv: 'NYSE:GNRC'    },
+      { symbol: 'VOO',   tv: 'AMEX:VOO'     },
     ];
 
-    async function fetchOneStat(yf) {
-      const base = `https://query1.finance.yahoo.com/v8/finance/chart/${yf}?range=1y&interval=1d`;
-      const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(base)}`;
+    async function fetchOneStat(symbol) {
+      const to   = Math.floor(Date.now() / 1000);
+      const from = to - 365 * 24 * 60 * 60;
+      const url  = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${API_KEY}`;
       const r = await fetch(url);
       const d = await r.json();
-      const closes = d.chart.result[0].indicators.quote[0].close.filter(v => v !== null);
-      return ((closes.at(-1) - closes[0]) / closes[0]) * 100;
+      if (d.s !== 'ok') throw new Error('no data');
+      return ((d.c.at(-1) - d.c[0]) / d.c[0]) * 100;
     }
 
     function formatPct(n) {
@@ -154,12 +157,10 @@
     }
 
     async function init() {
-      // Fetch all performance data first
       const results = await Promise.all(
-        STOCKS.map(s => fetchOneStat(s.yf).catch(() => null))
+        STOCKS.map(s => fetchOneStat(s.symbol).catch(() => null))
       );
 
-      // Attach pct to each stock and sort best to worst
       const sorted = STOCKS.map((s, i) => ({ ...s, pct: results[i] }))
         .sort((a, b) => {
           if (a.pct === null) return 1;
@@ -167,10 +168,8 @@
           return b.pct - a.pct;
         });
 
-      // Render charts in sorted order
       sorted.forEach((s, i) => renderChart(s, s.pct, i));
 
-      // Portfolio average
       const valid = results.filter(v => v !== null);
       const el = document.getElementById('perf-value');
       if (!valid.length) { el.textContent = 'N/A'; return; }
