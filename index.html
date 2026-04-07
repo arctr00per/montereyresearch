@@ -36,7 +36,6 @@
       .wrap {
         width: 90%;
       }
- 
       .brand {
         font-size: 11vw;
       }
@@ -98,7 +97,6 @@
  
   </div>
  
-  <script src="https://s3.tradingview.com/tv.js"></script>
   <script>
     const STOCKS = [
       { symbol: 'META',  tv: 'NASDAQ:META',  yf: 'META'  },
@@ -131,40 +129,46 @@
       return `${sign}${n.toFixed(2)}%`;
     }
  
-    function renderChart(s, pct, i) {
+    function renderChart(s, pct) {
       const list = document.getElementById('chart-list');
+ 
+      // Label
       const block = document.createElement('div');
       block.className = 'chart-block';
  
-      const pctHtml = pct !== null
-        ? `<span class="chart-pct ${pct >= 0 ? 'perf-pos' : 'perf-neg'}">${formatPct(pct)}</span>`
-        : '';
+      const label = document.createElement('div');
+      label.className = 'chart-label';
+      label.innerHTML = `<span>${s.symbol}</span>${pct !== null ? `<span class="chart-pct ${pct >= 0 ? 'perf-pos' : 'perf-neg'}">${formatPct(pct)}</span>` : ''}`;
+      block.appendChild(label);
  
-      block.innerHTML = `
-        <div class="chart-label">
-          <span>${s.symbol}</span>${pctHtml}
-        </div>
-        <div id="tv-${i}"></div>
-      `;
-      list.appendChild(block);
+      // Widget container
+      const container = document.createElement('div');
+      container.className = 'tradingview-widget-container';
  
-      new TradingView.widget({
-        container_id: `tv-${i}`,
+      const widget = document.createElement('div');
+      widget.className = 'tradingview-widget-container__widget';
+      container.appendChild(widget);
+ 
+      // Script tag created properly so browser executes it
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
         symbol: s.tv,
-        interval: 'W',
-        range: '52W',
-        theme: 'light',
-        style: '2',
-        locale: 'en',
-        hide_top_toolbar: false,
-        hide_legend: true,
-        hide_side_toolbar: true,
-        allow_symbol_change: false,
-        save_image: false,
-        withdateranges: true,
         width: '100%',
-        height: 200,
+        height: 220,
+        locale: 'en',
+        dateRange: '12M',
+        colorTheme: 'light',
+        isTransparent: false,
+        autosize: true,
+        chartOnly: true,
       });
+      container.appendChild(script);
+ 
+      block.appendChild(container);
+      list.appendChild(block);
     }
  
     async function init() {
@@ -179,7 +183,7 @@
           return b.pct - a.pct;
         });
  
-      sorted.forEach((s, i) => renderChart(s, s.pct, i));
+      sorted.forEach(s => renderChart(s, s.pct));
  
       const valid = results.filter(v => v !== null);
       const el = document.getElementById('perf-value');
