@@ -112,6 +112,9 @@
       { symbol: 'COIN',  tv: 'NASDAQ:COIN',  yf: 'COIN'  },
       { symbol: 'GNRC',  tv: 'NYSE:GNRC',    yf: 'GNRC'  },
       { symbol: 'VOO',   tv: 'AMEX:VOO',     yf: 'VOO'   },
+      { symbol: 'AAPL',  tv: 'NASDAQ:AAPL',  yf: 'AAPL'  },
+      { symbol: 'AVGO',  tv: 'NASDAQ:AVGO',  yf: 'AVGO'  },
+      { symbol: 'MSFT',  tv: 'NASDAQ:MSFT',  yf: 'MSFT'  },
     ];
  
     async function fetchOneStat(yf) {
@@ -148,8 +151,8 @@
       new TradingView.widget({
         container_id: `tv-${i}`,
         symbol: s.tv,
-        interval: 'D',
-        range: '12M',
+        interval: 'W',
+        range: '52W',
         theme: 'light',
         style: '2',
         locale: 'en',
