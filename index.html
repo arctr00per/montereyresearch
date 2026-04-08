@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
- 
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Monterey Research</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪼</text></svg>" />
+  <title>ACTAEON HOLDINGS</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦌</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet" />
- 
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet" />
+
   <style>
     *,
     *::before,
@@ -18,57 +18,59 @@
       margin: 0;
       padding: 0;
     }
- 
+
     html,
     body {
       background: #fff;
       font-family: Helvetica, Arial, sans-serif;
       color: #444;
     }
- 
+
     .wrap {
       width: 25%;
       margin: 0 auto;
       padding: 60px 0 80px;
     }
- 
+
     @media (max-width: 768px) {
       .wrap {
         width: 90%;
       }
       .brand {
-        font-size: 11vw;
+        font-size: 9vw;
       }
     }
- 
+
     .brand {
-      font-family: 'Pinyon Script', cursive;
-      font-size: 3.5vw;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 2.4vw;
       white-space: nowrap;
       color: #333;
       display: block;
-      line-height: 1.1;
+      line-height: 1.15;
+      letter-spacing: 0.04em;
     }
- 
+
     .divider {
       border: none;
       border-top: 1px solid #e0e0e0;
       margin: 28px 0;
     }
- 
+
     .perf-line {
       font-size: 13px;
       margin-bottom: 36px;
       color: #444;
     }
- 
+
     .perf-pos { color: #3a9e6a; }
     .perf-neg { color: #c94f4f; }
- 
+
     .chart-block {
       margin-bottom: 28px;
     }
- 
+
     .chart-label {
       display: flex;
       align-items: baseline;
@@ -77,26 +79,26 @@
       color: #666;
       margin-bottom: 5px;
     }
- 
+
     .chart-pct {
       font-size: 11px;
     }
   </style>
 </head>
- 
+
 <body>
   <div class="wrap">
- 
-    <span class="brand">Monterey Research</span>
- 
+
+    <span class="brand">ACTAEON HOLDINGS</span>
+
     <hr class="divider" />
- 
+
     <div class="perf-line">1 Year Performance: <span id="perf-value">Loading…</span></div>
- 
+
     <div id="chart-list"></div>
- 
+
   </div>
- 
+
   <script>
     const STOCKS = [
       { symbol: 'META',  tv: 'NASDAQ:META',  yf: 'META'  },
@@ -114,7 +116,7 @@
       { symbol: 'AVGO',  tv: 'NASDAQ:AVGO',  yf: 'AVGO'  },
       { symbol: 'MSFT',  tv: 'NASDAQ:MSFT',  yf: 'MSFT'  },
     ];
- 
+
     async function fetchOneStat(yf) {
       const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yf}?range=1y&interval=1d`;
       const url = `https://corsproxy.io/?url=${encodeURIComponent(yahooUrl)}`;
@@ -123,33 +125,30 @@
       const closes = d.chart.result[0].indicators.quote[0].close.filter(v => v !== null);
       return ((closes.at(-1) - closes[0]) / closes[0]) * 100;
     }
- 
+
     function formatPct(n) {
       const sign = n >= 0 ? '+' : '';
       return `${sign}${n.toFixed(2)}%`;
     }
- 
+
     function renderChart(s, pct) {
       const list = document.getElementById('chart-list');
- 
-      // Label
+
       const block = document.createElement('div');
       block.className = 'chart-block';
- 
+
       const label = document.createElement('div');
       label.className = 'chart-label';
       label.innerHTML = `<span>${s.symbol}</span>${pct !== null ? `<span class="chart-pct ${pct >= 0 ? 'perf-pos' : 'perf-neg'}">${formatPct(pct)}</span>` : ''}`;
       block.appendChild(label);
- 
-      // Widget container
+
       const container = document.createElement('div');
       container.className = 'tradingview-widget-container';
- 
+
       const widget = document.createElement('div');
       widget.className = 'tradingview-widget-container__widget';
       container.appendChild(widget);
- 
-      // Script tag created properly so browser executes it
+
       const script = document.createElement('script');
       script.type = 'text/javascript';
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
@@ -166,25 +165,25 @@
         chartOnly: true,
       });
       container.appendChild(script);
- 
+
       block.appendChild(container);
       list.appendChild(block);
     }
- 
+
     async function init() {
       const results = await Promise.all(
         STOCKS.map(s => fetchOneStat(s.yf).catch(() => null))
       );
- 
+
       const sorted = STOCKS.map((s, i) => ({ ...s, pct: results[i] }))
         .sort((a, b) => {
           if (a.pct === null) return 1;
           if (b.pct === null) return -1;
           return b.pct - a.pct;
         });
- 
+
       sorted.forEach(s => renderChart(s, s.pct));
- 
+
       const valid = results.filter(v => v !== null);
       const el = document.getElementById('perf-value');
       if (!valid.length) { el.textContent = 'N/A'; return; }
@@ -192,9 +191,9 @@
       el.textContent = formatPct(avg);
       el.className = avg >= 0 ? 'perf-pos' : 'perf-neg';
     }
- 
+
     init();
   </script>
 </body>
- 
+
 </html>
